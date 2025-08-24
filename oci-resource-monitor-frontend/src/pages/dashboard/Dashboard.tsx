@@ -1,4 +1,3 @@
-// src/pages/dashboard/Dashboard.tsx
 import { useEffect, useState } from 'react';
 import {
   fetchResources,
@@ -15,6 +14,7 @@ import AppLayout from '../../components/layout/AppLayout';
 import ResourceTable from './components/ResourceTable';
 import MetricChart from '../../components/MetricChart';
 import ServicesSection from './components/ServicesSection';
+import Spinner from '../../components/Spinner';
 
 export default function Dashboard() {
   const [resources, setResources] = useState<ResourceView[]>([]);
@@ -27,7 +27,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ---------- SAFE LATEST VALUE ----------
+  // ---------- UTILS ----------
   const getLatestValue = (series: MetricSeries[]): number | null => {
     if (series.length > 0 && series[0].points.length > 0) {
       return series[0].points.at(-1)?.v ?? null;
@@ -38,23 +38,19 @@ export default function Dashboard() {
   const latestCpuValue = getLatestValue(cpuMetrics);
   const latestMemoryValue = getLatestValue(memoryMetrics);
 
-  // ---------- FETCH ALL ----------
-  const loadData = async () => {
+  // ---------- LOAD STATIC DATA ----------
+  const loadStaticData = async () => {
     setLoading(true);
     setError(null);
     try {
       const [
         resourcesData,
-        cpuData,
-        memoryData,
         vcnsData,
         policiesData,
         compartmentsData,
         domainsData,
       ] = await Promise.all([
         fetchResources(),
-        fetchCpuMetrics(),
-        fetchMemoryMetrics(),
         fetchVcns(),
         fetchPolicies(),
         fetchCompartments(),
@@ -62,31 +58,69 @@ export default function Dashboard() {
       ]);
 
       setResources(resourcesData);
-      setCpuMetrics(cpuData);
-      setMemoryMetrics(memoryData);
       setVcns(vcnsData);
       setPolicies(policiesData);
       setCompartments(compartmentsData);
       setDomains(domainsData);
     } catch (err) {
-      console.error('Failed to load dashboard data:', err);
-      setError('Failed to load dashboard data. Please check the API endpoints.');
+      console.error('Failed to load static data:', err);
+      setError('Failed to load dashboard static data.');
     } finally {
       setLoading(false);
     }
   };
 
+  // ---------- LOAD METRICS ONLY ----------
+  const loadMetrics = async () => {
+    try {
+      const [cpuData, memoryData] = await Promise.all([
+        fetchCpuMetrics(),
+        fetchMemoryMetrics(),
+      ]);
+      setCpuMetrics(cpuData);
+      setMemoryMetrics(memoryData);
+    } catch (err) {
+      console.error('Failed to load metrics:', err);
+    }
+  };
+
   useEffect(() => {
-    loadData();
-    const intervalId = setInterval(loadData, 610000); 
-    return () => clearInterval(intervalId);
+    // initial load
+    loadStaticData();
+    loadMetrics();
+    const id = setInterval(loadMetrics, 60000); // refresh metrics every 60s
+    return () => clearInterval(id);
   }, []);
+
+  // ---------- MERGE METRICS INTO RESOURCES ----------
+  const mappedResources: Resource[] = resources.map((r) => ({
+    ...r,
+    cpu_usage: latestCpuValue ?? 0,
+    memory_usage: latestMemoryValue ?? 0,
+    ts: new Date().toISOString(),
+  }));
+
+  const targetVm = mappedResources.find(r => r.name === 'springboot-ubuntu-vm');
+  const otherResources = mappedResources.filter(r => r.name !== 'springboot-ubuntu-vm');
+
+  const statusColors: Record<string, string> = {
+    RUNNING: 'bg-green-100 text-green-800',
+    STOPPED: 'bg-gray-100 text-gray-800',
+    TERMINATED: 'bg-red-100 text-red-800',
+    UNKNOWN: 'bg-yellow-100 text-yellow-800',
+  };
+
+  const usageColor = (value: number, warn: number, crit: number) => {
+    if (value >= crit) return 'text-red-600';
+    if (value >= warn) return 'text-yellow-600';
+    return 'text-green-700';
+  };
 
   // ---------- RENDER ----------
   if (loading) {
     return (
       <AppLayout>
-        <div className="p-6 text-center">Loading dashboard data...</div>
+        <Spinner />
       </AppLayout>
     );
   }
@@ -99,45 +133,59 @@ export default function Dashboard() {
     );
   }
 
-  const mappedResources: Resource[] = resources.map((r) => ({
-    ...r,
-    cpu_usage: (r as any).cpu_usage ?? 0,
-    memory_usage: (r as any).memory_usage ?? 0,
-    ts: (r as any).ts ?? new Date().toISOString(),
-  }));
-
   return (
     <AppLayout>
       <div className="p-6">
-        <h1 className="text-3xl font-bold mb-6">OCI Resource Monitor Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-6">
+          OCI Resource Monitor Dashboard
+        </h1>
 
-        {/* METRICS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <MetricChart
-            title={`CPU (mean, 1m) – ${
-              latestCpuValue !== null ? latestCpuValue.toFixed(2) : 'N/A'
-            }%`}
-            color="#2563eb"
-            type="line"
-            unit="%"
-            series={cpuMetrics}
-          />
-          <MetricChart
-            title={`Memory (mean, 1m) – ${
-              latestMemoryValue !== null ? latestMemoryValue.toFixed(2) : 'N/A'
-            }%`}
-            color="#059669"
-            fill="#A7F3D0"
-            type="area"
-            unit="%"
-            series={memoryMetrics}
-          />
-        </div>
+        {/* Highlight card for springboot-ubuntu-vm */}
+        {targetVm && (
+          <div className="mb-8 p-4 border rounded shadow">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">{targetVm.name}</h2>
+              <span className={`px-3 py-1 rounded-full text-sm font-bold ${statusColors[targetVm.status] || 'bg-gray-200'}`}>
+                {targetVm.status}
+              </span>
+            </div>
+            <div className="flex gap-8 mb-6">
+              <div className={`font-medium ${usageColor(targetVm.cpu_usage, 70, 90)}`}>
+                CPU: {targetVm.cpu_usage.toFixed(2)}%
+              </div>
+              <div className={`font-medium ${usageColor(targetVm.memory_usage, 75, 90)}`}>
+                Memory: {targetVm.memory_usage.toFixed(2)}%
+              </div>
+            </div>
+            {/* Charts inside the card */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <MetricChart
+                title={`CPU (mean, 1m) – ${
+                  latestCpuValue !== null ? latestCpuValue.toFixed(2) : 'N/A'
+                }%`}
+                color="#2563eb"
+                type="line"
+                unit="%"
+                series={cpuMetrics}
+              />
+              <MetricChart
+                title={`Memory (mean, 1m) – ${
+                  latestMemoryValue !== null ? latestMemoryValue.toFixed(2) : 'N/A'
+                }%`}
+                color="#059669"
+                fill="#A7F3D0"
+                type="area"
+                unit="%"
+                series={memoryMetrics}
+              />
+            </div>
+          </div>
+        )}
 
-        {/* RESOURCES */}
-        <ResourceTable resources={mappedResources} />
+        {/* Remaining resources */}
+        <ResourceTable resources={otherResources} />
 
-        {/* SERVICES */}
+        {/* Services */}
         <ServicesSection
           vcns={vcns}
           policies={policies}

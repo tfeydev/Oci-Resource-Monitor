@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Spinner from '../../components/Spinner';
 
 const ObjectsPage: React.FC = () => {
   const { bucketName } = useParams<{ bucketName: string }>();
@@ -88,6 +89,7 @@ const ObjectsPage: React.FC = () => {
   if (loading) {
     return (
       <main className="max-w-7xl mx-auto px-8 py-6">
+        <Spinner />
         <p>Loading objects for {bucketName}...</p>
       </main>
     );
