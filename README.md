@@ -19,7 +19,7 @@ Provides REST APIs to fetch and aggregate metrics from OCI resources.
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
-- [Project Structure](#projectstructure)
+- [Project Structure](#projects-tructure)
 - [Build & Run](#build--run)
 - [Configuration](#configuration)
 - [API Endpoints](#api-endpoints)
@@ -182,4 +182,5 @@ curl -s "http://localhost:8080/api/identity/policies" -H "Accept: application/js
 MIT License
 
 [↑ Back to top](#oci-monitor--backend-service)
+
 
