@@ -5,10 +5,21 @@ Provides REST APIs to fetch and aggregate metrics from OCI resources.
 
 ---
 
+## Features
+
+- 📊 **Dashboard**: Real-time monitoring of OCI resources.  
+- 💾 **Object Storage**: Track buckets and stored objects.  
+- ⚙️ **Compute**: Monitor VM instances, CPU, and memory usage.  
+- 🌐 **Networking**: Basic VCN and subnet monitoring.  
+- 🔒 **Authentication**: Uses OCI config profiles with restricted permissions for security.
+
+---
+
 ## Table of Contents
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
+- [Project Structure](#projectstructure)
 - [Build & Run](#build--run)
 - [Configuration](#configuration)
 - [API Endpoints](#api-endpoints)
@@ -27,7 +38,7 @@ It exposes REST APIs for use in dashboards or integration with external monitori
 ---
 
 ## Architecture
-- **Spring Boot (Java 17)** for REST APIs
+- **Spring Boot (Java 21)** for REST APIs
 - **OCI Java SDK** for communication with Oracle Cloud
 - **Maven** for build and dependency management
 - Layered structure: `controller` → `service` → `repository`
@@ -42,6 +53,24 @@ It exposes REST APIs for use in dashboards or integration with external monitori
 - OCI Account (can be Always Free)
 - API Key configured in `~/.oci/config`
 
+[↑ Back to top](#oci-monitor--backend-service)
+
+---
+
+## Project Structure
+
+```
+.
+├── backend/               # Spring Boot backend service
+│   ├── src/main/java/     # Java source code
+│   └── pom.xml            # Maven configuration
+├── frontend/              # React frontend application
+│   ├── src/               # React components and pages
+│   └── package.json       # NPM dependencies
+├── cert/                  # Certification study notes (Markdown)
+│   └── oci_foundations/   # OCI Foundation structured summaries
+└── README.md              # Project documentation
+```
 [↑ Back to top](#oci-monitor--backend-service)
 
 ---
@@ -153,3 +182,4 @@ curl -s "http://localhost:8080/api/identity/policies" -H "Accept: application/js
 MIT License
 
 [↑ Back to top](#oci-monitor--backend-service)
+
