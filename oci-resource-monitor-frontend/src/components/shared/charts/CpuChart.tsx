@@ -1,6 +1,6 @@
 // src/components/CpuChart.tsx
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import type { MetricSeries } from '../api';
+import type { MetricSeries } from '../../../api';
 
 export default function CpuChart({series}:{series:MetricSeries[]}) {
   const data = (series[0]?.points ?? []).map(p => ({ t: new Date(p.t).toLocaleTimeString(), v: p.v }));

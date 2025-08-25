@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   fetchResources,
   fetchCpuMetrics,
@@ -7,14 +7,14 @@ import {
   fetchPolicies,
   fetchCompartments,
   fetchDomains,
-} from '../../api';
-import type { ResourceView, MetricSeries, Resource } from '../../api';
+} from "../../api";
+import type { ResourceView, MetricSeries, Resource } from "../../api";
 
-import AppLayout from '../../components/layout/AppLayout';
-import ResourceTable from './components/ResourceTable';
-import MetricChart from '../../components/MetricChart';
-import ServicesSection from './components/ServicesSection';
-import Spinner from '../../components/Spinner';
+import AppLayout from "../../components/layout/AppLayout";
+import ResourceTable from "./components/ResourceTable";
+import MetricChart from "../../components/shared/charts/MetricChart";
+import ServicesSection from "./components/ServicesSection";
+import Spinner from "../../components/shared/Spinner";
 
 export default function Dashboard() {
   const [resources, setResources] = useState<ResourceView[]>([]);
@@ -63,8 +63,8 @@ export default function Dashboard() {
       setCompartments(compartmentsData);
       setDomains(domainsData);
     } catch (err) {
-      console.error('Failed to load static data:', err);
-      setError('Failed to load dashboard static data.');
+      console.error("Failed to load static data:", err);
+      setError("Failed to load dashboard static data.");
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export default function Dashboard() {
       setCpuMetrics(cpuData);
       setMemoryMetrics(memoryData);
     } catch (err) {
-      console.error('Failed to load metrics:', err);
+      console.error("Failed to load metrics:", err);
     }
   };
 
@@ -100,20 +100,24 @@ export default function Dashboard() {
     ts: new Date().toISOString(),
   }));
 
-  const targetVm = mappedResources.find(r => r.name === 'springboot-ubuntu-vm');
-  const otherResources = mappedResources.filter(r => r.name !== 'springboot-ubuntu-vm');
+  const targetVm = mappedResources.find(
+    (r) => r.name === "springboot-ubuntu-vm"
+  );
+  const otherResources = mappedResources.filter(
+    (r) => r.name !== "springboot-ubuntu-vm"
+  );
 
   const statusColors: Record<string, string> = {
-    RUNNING: 'bg-green-100 text-green-800',
-    STOPPED: 'bg-gray-100 text-gray-800',
-    TERMINATED: 'bg-red-100 text-red-800',
-    UNKNOWN: 'bg-yellow-100 text-yellow-800',
+    RUNNING: "bg-green-100 text-green-800",
+    STOPPED: "bg-gray-100 text-gray-800",
+    TERMINATED: "bg-red-100 text-red-800",
+    UNKNOWN: "bg-yellow-100 text-yellow-800",
   };
 
   const usageColor = (value: number, warn: number, crit: number) => {
-    if (value >= crit) return 'text-red-600';
-    if (value >= warn) return 'text-yellow-600';
-    return 'text-green-700';
+    if (value >= crit) return "text-red-600";
+    if (value >= warn) return "text-yellow-600";
+    return "text-green-700";
   };
 
   // ---------- RENDER ----------
@@ -137,7 +141,22 @@ export default function Dashboard() {
     <AppLayout>
       <div className="p-6">
         <h1 className="text-3xl font-bold mb-6">
-          OCI Resource Monitor Dashboard
+          <span className="text-indigo-600">
+            OCI Resource Monitor Dashboard
+          </span>
+          <button
+            onClick={() => {
+              loadStaticData();
+              loadMetrics();
+            }}
+            className="ml-3 relative -top-1.5 px-2.5 py-1 
+               rounded text-xs font-medium 
+               bg-blue-300 hover:bg-blue-400 
+               text-blue-900 shadow-sm 
+               transition-colors duration-200"
+          >
+            Reload
+          </button>
         </h1>
 
         {/* Highlight card for springboot-ubuntu-vm */}
@@ -145,15 +164,31 @@ export default function Dashboard() {
           <div className="mb-8 p-4 border rounded shadow">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">{targetVm.name}</h2>
-              <span className={`px-3 py-1 rounded-full text-sm font-bold ${statusColors[targetVm.status] || 'bg-gray-200'}`}>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-bold ${
+                  statusColors[targetVm.status] || "bg-gray-200"
+                }`}
+              >
                 {targetVm.status}
               </span>
             </div>
             <div className="flex gap-8 mb-6">
-              <div className={`font-medium ${usageColor(targetVm.cpu_usage, 70, 90)}`}>
+              <div
+                className={`font-medium ${usageColor(
+                  targetVm.cpu_usage,
+                  70,
+                  90
+                )}`}
+              >
                 CPU: {targetVm.cpu_usage.toFixed(2)}%
               </div>
-              <div className={`font-medium ${usageColor(targetVm.memory_usage, 75, 90)}`}>
+              <div
+                className={`font-medium ${usageColor(
+                  targetVm.memory_usage,
+                  75,
+                  90
+                )}`}
+              >
                 Memory: {targetVm.memory_usage.toFixed(2)}%
               </div>
             </div>
@@ -161,7 +196,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <MetricChart
                 title={`CPU (mean, 1m) – ${
-                  latestCpuValue !== null ? latestCpuValue.toFixed(2) : 'N/A'
+                  latestCpuValue !== null ? latestCpuValue.toFixed(2) : "N/A"
                 }%`}
                 color="#2563eb"
                 type="line"
@@ -170,7 +205,9 @@ export default function Dashboard() {
               />
               <MetricChart
                 title={`Memory (mean, 1m) – ${
-                  latestMemoryValue !== null ? latestMemoryValue.toFixed(2) : 'N/A'
+                  latestMemoryValue !== null
+                    ? latestMemoryValue.toFixed(2)
+                    : "N/A"
                 }%`}
                 color="#059669"
                 fill="#A7F3D0"

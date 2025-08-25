@@ -9,8 +9,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import type { MetricSeries } from '../api';
-import { mapSeriesToChartData } from '../utils/mapSeries';
+import type { MetricSeries } from '../../../api';
+import { mapSeriesToChartData } from '../../../utils/mapSeries';
 
 // Hilfsfunktion für den letzten Wert
 function getLatestValue(series?: MetricSeries): number | null {

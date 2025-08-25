@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Spinner from '../../components/Spinner';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Spinner from "../../components/shared/Spinner";
+import AppLayout from "../../components/layout/AppLayout";
 
 const ObjectsPage: React.FC = () => {
   const { bucketName } = useParams<{ bucketName: string }>();
   const [objectNames, setObjectNames] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPrefix, setCurrentPrefix] = useState<string>('');
+  const [currentPrefix, setCurrentPrefix] = useState<string>("");
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,9 +22,11 @@ const ObjectsPage: React.FC = () => {
 
     async function fetchObjects() {
       try {
-        const res = await fetch(`http://localhost:8080/api/storage/buckets/${bucketName}/objects`);
+        const res = await fetch(
+          `http://localhost:8080/api/storage/buckets/${bucketName}/objects`
+        );
         if (!res.ok) {
-          throw new Error('Failed to fetch objects');
+          throw new Error("Failed to fetch objects");
         }
         const data: string[] = await res.json();
         setObjectNames(data);
@@ -46,14 +49,16 @@ const ObjectsPage: React.FC = () => {
   };
 
   // Logic to process items on the current level
-  const filteredObjects = objectNames.filter(name => name.startsWith(currentPrefix));
+  const filteredObjects = objectNames.filter((name) =>
+    name.startsWith(currentPrefix)
+  );
   const currentLevelItems: { name: string; isFolder: boolean }[] = [];
   const uniqueItems = new Set<string>();
 
-  filteredObjects.forEach(name => {
+  filteredObjects.forEach((name) => {
     const relativeName = name.substring(currentPrefix.length);
-    if (relativeName.includes('/')) {
-      const folderName = relativeName.split('/')[0] + '/';
+    if (relativeName.includes("/")) {
+      const folderName = relativeName.split("/")[0] + "/";
       if (!uniqueItems.has(folderName)) {
         uniqueItems.add(folderName);
         currentLevelItems.push({ name: folderName, isFolder: true });
@@ -67,46 +72,68 @@ const ObjectsPage: React.FC = () => {
   });
 
   const goBack = () => {
-    if (currentPrefix === '') {
-      navigate('/storage/buckets');
+    if (currentPrefix === "") {
+      navigate("/storage/buckets");
     } else {
-      const segments = currentPrefix.split('/').filter(Boolean);
+      const segments = currentPrefix.split("/").filter(Boolean);
       segments.pop();
-      const newPrefix = segments.length > 0 ? segments.join('/') + '/' : '';
+      const newPrefix = segments.length > 0 ? segments.join("/") + "/" : "";
       setCurrentPrefix(newPrefix);
     }
   };
 
   // Breadcrumbs logic
   const breadcrumbs = [
-    { name: bucketName, path: '' },
-    ...currentPrefix.split('/').filter(Boolean).map((segment, index, arr) => ({
-      name: segment + '/',
-      path: arr.slice(0, index + 1).join('/') + '/'
-    }))
+    { name: bucketName, path: "" },
+    ...currentPrefix
+      .split("/")
+      .filter(Boolean)
+      .map((segment, index, arr) => ({
+        name: segment + "/",
+        path: arr.slice(0, index + 1).join("/") + "/",
+      })),
   ];
-  
+
   if (loading) {
+    <AppLayout>
     return (
       <main className="max-w-7xl mx-auto px-8 py-6">
-        <Spinner />
-        <p>Loading objects for {bucketName}...</p>
+        <div className="flex flex-col items-center gap-2">
+          <Spinner />
+          <p className="text-gray-600">{bucketName}</p>
+        </div>
       </main>
     );
+    </AppLayout>
   }
 
   if (error) {
+    <AppLayout>
     return (
       <main className="max-w-7xl mx-auto px-8 py-6">
         <p className="text-red-500">Error: {error}</p>
       </main>
     );
+    </AppLayout>
+  }
+
+  if (error) {
+    return (
+      <AppLayout>
+        <main className="max-w-7xl mx-auto px-8 py-6">
+          <p className="text-red-500">Error: {error}</p>
+        </main>
+      </AppLayout>
+    );
   }
 
   return (
+    <AppLayout>
     <main className="max-w-7xl mx-auto px-8 py-6">
-      <h2 className="text-2xl font-semibold mb-4">Objects in Bucket: {bucketName}</h2>
-      
+      <h2 className="text-2xl font-semibold mb-4">
+        Objects in Bucket: {bucketName}
+      </h2>
+
       {/* Back button and Breadcrumbs */}
       <div className="flex items-center gap-4 mb-4">
         <button onClick={goBack} className="text-blue-600 hover:underline">
@@ -121,7 +148,9 @@ const ObjectsPage: React.FC = () => {
                 <button
                   onClick={() => setCurrentPrefix(crumb.path)}
                   className={`hover:underline transition-colors duration-200 ${
-                    index === breadcrumbs.length - 1 ? 'text-gray-800 font-medium' : 'text-blue-600'
+                    index === breadcrumbs.length - 1
+                      ? "text-gray-800 font-medium"
+                      : "text-blue-600"
                   }`}
                 >
                   {crumb.name}
@@ -139,22 +168,35 @@ const ObjectsPage: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Object Name
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {currentLevelItems.map((item) => (
-                <tr 
-                  key={item.name} 
-                  onClick={() => item.isFolder ? handleDrillDown(currentPrefix + item.name) : handleSelectObject(currentPrefix + item.name)}
+                <tr
+                  key={item.name}
+                  onClick={() =>
+                    item.isFolder
+                      ? handleDrillDown(currentPrefix + item.name)
+                      : handleSelectObject(currentPrefix + item.name)
+                  }
                   className={`cursor-pointer transition-colors duration-150 ${
-                    selectedItem === currentPrefix + item.name ? 'bg-blue-100' : 'hover:bg-gray-100'
+                    selectedItem === currentPrefix + item.name
+                      ? "bg-blue-100"
+                      : "hover:bg-gray-100"
                   }`}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <span className={item.isFolder ? 'text-blue-600' : 'text-gray-900'}>
+                    <span
+                      className={
+                        item.isFolder ? "text-blue-600" : "text-gray-900"
+                      }
+                    >
                       {item.name}
                     </span>
                   </td>
@@ -166,9 +208,7 @@ const ObjectsPage: React.FC = () => {
 
         {/* Right column: Selected object details */}
         <div className="flex-1 p-6 bg-white rounded-lg shadow-md border border-gray-200">
-          <h3 className="text-xl font-semibold mb-4">
-            Selected Object
-          </h3>
+          <h3 className="text-xl font-semibold mb-4">Selected Object</h3>
           {selectedItem ? (
             <div className="space-y-2">
               <p className="text-gray-700">Name: **{selectedItem}**</p>
@@ -182,6 +222,7 @@ const ObjectsPage: React.FC = () => {
         </div>
       </div>
     </main>
+  </AppLayout>
   );
 };
 

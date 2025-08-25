@@ -1,16 +1,12 @@
-// src/App.tsx
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-import Header from './components/Header';
+import Header from './components/layout/Header';
 import Dashboard from './pages/dashboard/Dashboard';
 import BucketsPage from './pages/storage/Buckets';
 import ObjectsPage from './pages/storage/Objects'; // <--- Import here
-
-// Placeholder components for other pages
-const ComputePage = () => <div>Compute Page Content</div>;
-const NetworkingPage = () => <div>Networking Page Content</div>;
-const IdentityPage = () => <div>Identity Page Content</div>;
+import ComputePage from './pages/Compute/Compute';
+import NetworkingPage from './pages/Networking/Networking';
+import IdentityPage from './pages/Identity/Identity';
 
 export default function App() {
   return (
