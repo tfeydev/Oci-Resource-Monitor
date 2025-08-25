@@ -77,6 +77,3 @@ Please follow the existing code style and include relevant documentation.
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE) for details.
-```
-
-If you want, I can also tailor this README so it **auto‑generates badges** (build status, license, dependencies) and includes **live screenshots** of the dashboard to make it pop even more visually. Would you like me to add that layer of polish next?
